@@ -29,8 +29,8 @@ private:
 
 	bool _SendAll(int _id, char* _data, int _totalBytes);
 	bool _RecvAll(int _id, char* _data, int _totalBytes);
-	bool _SendInt(int _id, int _int);
-	bool _GetInt(int _id, int& _int);
+	bool _Sendint32_t(int _id, int32_t _int32_t);
+	bool _Getint32_t(int _id, int32_t& _int32_t);
 	bool _SendPacketType(int _id, Packet _packetType);
 	bool _GetPacketType(int _id, Packet& _packetType);
 	bool _SendString(int _id, std::string& _string);

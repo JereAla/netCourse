@@ -121,22 +121,24 @@ bool Server::_RecvAll(int _id, char* _data, int _totalBytes)
 	}
 	return true;
 }
-bool Server::_SendInt(int _id, int _int)
+bool Server::_Sendint32_t(int _id, int32_t _int32_t)
 {
 	//int ReturnCheck = send(connections[_id], (char*)&_int, sizeof(int), NULL);
 	//if (ReturnCheck == SOCKET_ERROR)
 	//	return false;
-	if (!_SendAll(_id, (char*)&_int, sizeof(int)))
+	_int32_t = htonl(_int32_t);		//convert long from host byte order to network byte order
+	if (!_SendAll(_id, (char*)&_int32_t, sizeof(int32_t)))
 		return false;
 	return true;
 }
-bool Server::_GetInt(int _id, int& _int)
+bool Server::_Getint32_t(int _id, int32_t& _int32_t)
 {
 	//int ReturnCheck = recv(connections[_id], (char*)&_int, sizeof(int), NULL);
 	//if (ReturnCheck == SOCKET_ERROR)
 	//	return false;
-	if (!_RecvAll(_id, (char*)&_int, sizeof(int)))
+	if (!_RecvAll(_id, (char*)&_int32_t, sizeof(int32_t)))
 		return false;
+	_int32_t = ntohl(_int32_t);		//convert long from network byte order to host byte order
 	return true;
 }
 bool Server::_SendPacketType(int _id, Packet _packetType)
@@ -144,8 +146,10 @@ bool Server::_SendPacketType(int _id, Packet _packetType)
 	//int ReturnCheck = send(connections[_id], (char*)&_packetType, sizeof(Packet), NULL);
 	//if (ReturnCheck == SOCKET_ERROR)
 	//	return false;
-	if (!_SendAll(_id, (char*)&_packetType, sizeof(Packet)))
+	if (!_Sendint32_t(_id, _packetType))
 		return false;
+	//if (!_SendAll(_id, (char*)&_packetType, sizeof(Packet)))
+	//	return false;
 	return true;
 }
 bool Server::_GetPacketType(int _id, Packet& _packetType)
@@ -153,8 +157,12 @@ bool Server::_GetPacketType(int _id, Packet& _packetType)
 	//int ReturnCheck = recv(connections[_id], (char*)&_packetType, sizeof(Packet), NULL);
 	//if (ReturnCheck == SOCKET_ERROR)
 	//	return false;
-	if (!_RecvAll(_id, (char*)&_packetType, sizeof(Packet)))
+	int32_t packettype;
+	if (!_Getint32_t(_id, packettype))
 		return false;
+	_packetType = (Packet)packettype;
+	//if (!_RecvAll(_id, (char*)&_packetType, sizeof(Packet)))
+		//return false;
 	return true;
 }
 bool Server::_SendString(int _id, std::string& _string)
@@ -162,8 +170,8 @@ bool Server::_SendString(int _id, std::string& _string)
 	if (!_SendPacketType(_id, P_ChatMessage))
 		return false;
 
-	int bufferLength = _string.size();
-	if (!_SendInt(_id, bufferLength))
+	int32_t bufferLength = _string.size();
+	if (!_Sendint32_t(_id, bufferLength))
 		return false;
 	//int ReturnCheck = send(connections[_id], _string.c_str(), bufferLength, NULL);
 	//if (ReturnCheck == SOCKET_ERROR)
@@ -174,8 +182,8 @@ bool Server::_SendString(int _id, std::string& _string)
 }
 bool Server::_GetString(int _id, std::string& _string)
 {
-	int bufferlength;
-	if (!_GetInt(_id, bufferlength))
+	int32_t bufferlength;
+	if (!_Getint32_t(_id, bufferlength))
 		return false;
 
 	char* buffer = new char[bufferlength + 1];

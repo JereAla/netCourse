@@ -32,8 +32,8 @@ private:
 
 	bool _SendAll(char* _data, int _totalBytes);
 	bool _RecvAll(char* _data, int _totalBytes);
-	bool _SendInt(int _int);
-	bool _GetInt(int& _int);
+	bool _Sendint32_t(int32_t _int32_t);
+	bool _Getint32_t(int32_t& _int32_t);
 	bool _SendPacketType(Packet _packetType);
 	bool _GetPacketType(Packet& _packetType);
 
