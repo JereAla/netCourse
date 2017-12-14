@@ -1,6 +1,8 @@
 #ifndef Client_H
 #define Client_H
 //#pragma once
+//if using VS15 release comment below--v
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib,"ws2_32.lib")
 
 #include <WinSock2.h>

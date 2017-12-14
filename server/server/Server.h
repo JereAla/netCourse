@@ -1,9 +1,12 @@
 #ifndef Server_H
 #define Server_H
 //#pragma once
+//if using VS15 release comment below--v
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib,"ws2_32.lib")
 
 #include <WinSock2.h>
+#include <fstream>
 #include <iostream>
 #include <stdint.h>  //use int32_t
 #include <string>
@@ -26,6 +29,7 @@ public:
 private:
 	bool _ProcessPacket(int _id, Packet _packetType);
 	static void ClientHandlerThread(int _id);
+	void _GetServerIP();
 
 	bool _SendAll(int _id, char* _data, int _totalBytes);
 	bool _RecvAll(int _id, char* _data, int _totalBytes);

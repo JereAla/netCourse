@@ -1,13 +1,11 @@
 # netCourse #
-Server-client pong course project
+Server-client (pong) course project
 
 ## Code guidelines: ##
-- Public varibles: someStuff
-- Private variables: someStuff_
+- Public varibles: SomeStuff
+- Private variables: someStuff
+- Public methods: SomeStuff
+- Private methods: _SomeStuff
 - Classes: SomeStuff
-- methods: SomeStuff
 - File naming: SomeStuff
 
-## Organization: ##
-- Headers -> all .h files
-- Source  -> all .cpp files

@@ -4,16 +4,24 @@ Server::Server(int _port, bool _publicBroadcast)
 {
 	WSADATA wsaData;
 	WORD dllVersion = MAKEWORD(2, 1);
+
 	if (WSAStartup(dllVersion, &wsaData) != 0)
 	{
 		MessageBoxA(NULL, "Winsock startup failed", "ERROR :)", MB_OK | MB_ICONERROR);
 		exit(1);
 	}
-	
+	//_GetServerIP();
 	if (_publicBroadcast)
+	{
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);		//public broadcast
+		_GetServerIP();
+	}
 	else
+	{
 		addr.sin_addr.s_addr = inet_addr(LocalHost);		//local broadcast(host ip)
+		printf("Server IP address (localHost): %s\n", LocalHost);
+	}
+	printf("Using PORT: %d\n", _port);
 
 	addr.sin_port = htons(_port);
 	addr.sin_family = AF_INET; //IPv4 socket
@@ -96,6 +104,31 @@ void Server::ClientHandlerThread(int _id)
 	printf("Lost connetion to client ID: %d\n", _id);
 	closesocket(Serverptr->connections[_id]);		//close connection socket
 }
+void Server::_GetServerIP()
+{
+	system("ipconfig > tempip34.txt");
+	std::ifstream IPFile;
+	std::string ipline;
+	int offset;
+	char* search0 = "IPv4 Address. . . . . . . . . . . :";
+	IPFile.open("tempip34.txt");
+
+	if (IPFile.is_open())
+	{
+		while (!IPFile.eof())
+		{
+			std::getline(IPFile, ipline);
+			if ((offset = ipline.find(search0, 0)) != std::string::npos)
+			{
+				ipline.erase(0, 39);
+
+				std::cout << "Server IP address (publicHost): " << ipline << "\n";
+				IPFile.close();
+			}
+		}
+	}
+	remove("tempip34.txt");
+}
 
 bool Server::_SendAll(int _id, char* _data, int _totalBytes)
 {
@@ -105,6 +138,7 @@ bool Server::_SendAll(int _id, char* _data, int _totalBytes)
 		int returnCheck = send(connections[_id], _data + bytesSend, _totalBytes - bytesSend, NULL);
 		if (returnCheck == SOCKET_ERROR)
 			return false;
+
 		bytesSend += returnCheck;
 	}
 	return true;
@@ -117,52 +151,41 @@ bool Server::_RecvAll(int _id, char* _data, int _totalBytes)
 		int returnCheck = recv(connections[_id], _data + bytesReceived, _totalBytes - bytesReceived, NULL);
 		if (returnCheck == SOCKET_ERROR)
 			return false;
+
 		bytesReceived += returnCheck;
 	}
 	return true;
 }
 bool Server::_Sendint32_t(int _id, int32_t _int32_t)
 {
-	//int ReturnCheck = send(connections[_id], (char*)&_int, sizeof(int), NULL);
-	//if (ReturnCheck == SOCKET_ERROR)
-	//	return false;
 	_int32_t = htonl(_int32_t);		//convert long from host byte order to network byte order
 	if (!_SendAll(_id, (char*)&_int32_t, sizeof(int32_t)))
 		return false;
+
 	return true;
 }
 bool Server::_Getint32_t(int _id, int32_t& _int32_t)
 {
-	//int ReturnCheck = recv(connections[_id], (char*)&_int, sizeof(int), NULL);
-	//if (ReturnCheck == SOCKET_ERROR)
-	//	return false;
 	if (!_RecvAll(_id, (char*)&_int32_t, sizeof(int32_t)))
 		return false;
+
 	_int32_t = ntohl(_int32_t);		//convert long from network byte order to host byte order
 	return true;
 }
 bool Server::_SendPacketType(int _id, Packet _packetType)
 {
-	//int ReturnCheck = send(connections[_id], (char*)&_packetType, sizeof(Packet), NULL);
-	//if (ReturnCheck == SOCKET_ERROR)
-	//	return false;
 	if (!_Sendint32_t(_id, _packetType))
 		return false;
-	//if (!_SendAll(_id, (char*)&_packetType, sizeof(Packet)))
-	//	return false;
+
 	return true;
 }
 bool Server::_GetPacketType(int _id, Packet& _packetType)
 {
-	//int ReturnCheck = recv(connections[_id], (char*)&_packetType, sizeof(Packet), NULL);
-	//if (ReturnCheck == SOCKET_ERROR)
-	//	return false;
 	int32_t packettype;
 	if (!_Getint32_t(_id, packettype))
 		return false;
+
 	_packetType = (Packet)packettype;
-	//if (!_RecvAll(_id, (char*)&_packetType, sizeof(Packet)))
-		//return false;
 	return true;
 }
 bool Server::_SendString(int _id, std::string& _string)
@@ -173,11 +196,10 @@ bool Server::_SendString(int _id, std::string& _string)
 	int32_t bufferLength = _string.size();
 	if (!_Sendint32_t(_id, bufferLength))
 		return false;
-	//int ReturnCheck = send(connections[_id], _string.c_str(), bufferLength, NULL);
-	//if (ReturnCheck == SOCKET_ERROR)
-	//	return false;
+
 	if (!_SendAll(_id, (char*)_string.c_str(), bufferLength))
 		return false;
+
 	return true;
 }
 bool Server::_GetString(int _id, std::string& _string)
@@ -188,17 +210,14 @@ bool Server::_GetString(int _id, std::string& _string)
 
 	char* buffer = new char[bufferlength + 1];
 	buffer[bufferlength] = '\0';
-	//comment lines below when freeing commented code below--v
-	//int ReturnCheck = recv(connections[_id], buffer, bufferlength, NULL);
-	//_string = buffer;
-	//delete[] buffer;
-	//if (ReturnCheck == SOCKET_ERROR)
-	//	return false;
-	//--------------------------------------------------------------
+
 	if (!_RecvAll(_id, buffer, bufferlength))
+	{
+		delete[] buffer;
 		return false;
+	}
 	_string = buffer;
 	delete[] buffer;
-	//_____________________________________________________________
+
 	return true;
 }
